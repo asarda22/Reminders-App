@@ -1,6 +1,7 @@
 package com.example.reminderapp.ui.reminder
 
 import android.app.DatePickerDialog
+import android.util.Log
 import android.widget.DatePicker
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,9 +10,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,18 +18,29 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.google.accompanist.insets.systemBarsPadding
 import java.util.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.reminderapp.data.entity.Category
+import kotlinx.coroutines.launch
 
 @Composable
 fun Reminder(
-    onBackPress: () -> Unit
+    onBackPress: () -> Unit,
+    viewModel: ReminderViewModel = viewModel()
 ) {
+    val viewState by viewModel.state.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    val message = rememberSaveable { mutableStateOf("") }
+    val category = rememberSaveable { mutableStateOf("") }
+    val date = rememberSaveable { mutableStateOf("") }
 
     val c = Calendar.getInstance()
     val year = c.get(Calendar.YEAR)
     val month = c.get(Calendar.MONTH)
     val day = c.get(Calendar.DAY_OF_MONTH)
-
-    val date = remember { mutableStateOf("") }
 
     val datePickerDialog = DatePickerDialog(
         LocalContext.current, DatePickerDialog.OnDateSetListener
@@ -39,6 +48,7 @@ fun Reminder(
             date.value = "$day/$month/$year"
         }, year, month, day
     )
+
 
     Surface {
         Column(
@@ -63,12 +73,16 @@ fun Reminder(
                 modifier = Modifier.padding(16.dp)
             ) {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = message.value,
+                    onValueChange = { message.value = it},
                     label = { Text(text = "Remind me about") },
                     modifier = Modifier.fillMaxWidth()
                 )
-
+                Spacer(modifier = Modifier.height(10.dp))
+                CategoryListDropdown(
+                    viewState = viewState,
+                    category = category
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row {
 
@@ -121,7 +135,21 @@ fun Reminder(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                              Log.i("datee",date.value)
+                              coroutineScope.launch{
+                                  viewModel.saveReminder(
+                                        com.example.reminderapp.data.entity.Reminder(
+                                          reminderMessage = message.value,
+                                            reminderDate = date.value,
+                                            reminderCategoryId = getCategoryId(viewState.categories,category.value),
+                                            location_x = null,
+                                            location_y = null
+                                      )
+                                  )
+                              }
+                        onBackPress()
+                    },
                     modifier = Modifier.fillMaxWidth().size(55.dp)
                 ) {
                     Text("Set Reminder")
@@ -130,4 +158,55 @@ fun Reminder(
         }
     }
 
+}
+
+private fun getCategoryId(categories: List<Category>, categoryName: String): Long {
+    return categories.first { category -> category.name == categoryName }.id
+}
+
+@Composable
+private fun CategoryListDropdown(
+    viewState: ReminderViewState,
+    category: MutableState<String>
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val icon = if (expanded) {
+        Icons.Filled.ArrowDropUp
+    } else {
+        Icons.Filled.ArrowDropDown
+    }
+
+    Column {
+        OutlinedTextField(
+            value = category.value,
+            onValueChange = { category.value = it},
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Category") },
+            readOnly = true,
+            trailingIcon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.clickable { expanded = !expanded }
+                )
+            }
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            viewState.categories.forEach { dropDownOption ->
+                DropdownMenuItem(
+                    onClick = {
+                        category.value = dropDownOption.name
+                        expanded = false
+                    }
+                ) {
+                    Text(text = dropDownOption.name)
+                }
+
+            }
+        }
+    }
 }
