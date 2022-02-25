@@ -27,5 +27,6 @@ data class Reminder(
     @ColumnInfo(name = "reminder_date") val reminderDate: String,
     @ColumnInfo(name= "reminder_category_id") val reminderCategoryId: Long,
     @ColumnInfo(name = "location_x") val location_x : Double?,
-    @ColumnInfo(name = "loaction_y") val location_y : Double?
+    @ColumnInfo(name = "loaction_y") val location_y : Double?,
+    @ColumnInfo(name = "reminder_time") val reminderTime: String?
 ): Parcelable

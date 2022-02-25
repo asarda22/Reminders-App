@@ -57,13 +57,15 @@ fun CategoryReminder(
                 verticalArrangement = Arrangement.Center
             ) {
                 items(list) { item ->
-                    ReminderListItem(
-                        reminder = item.reminder,
-                        category = item.category,
-                        onClick = {},
-                        modifier = Modifier.fillParentMaxWidth(),
-                        navController = navController
-                    )
+                    if(item.reminder.reminderTime.toString().isEmpty()) {
+                        ReminderListItem(
+                            reminder = item.reminder,
+                            category = item.category,
+                            onClick = {},
+                            modifier = Modifier.fillParentMaxWidth(),
+                            navController = navController
+                        )
+                    }
             }
         }
     }

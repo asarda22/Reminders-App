@@ -1,6 +1,7 @@
 package com.example.reminderapp.ui.home.categoryReminder
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.util.Log
 import android.widget.DatePicker
 import androidx.compose.foundation.border
@@ -41,17 +42,28 @@ fun EditCategoryReminder(
     var editMessage = rememberSaveable { mutableStateOf(reminder.reminderMessage) }
     var editCategoryValue = rememberSaveable { mutableStateOf(category.name) }
     var editDate = rememberSaveable { mutableStateOf(reminder.reminderDate) }
+    val editTime = rememberSaveable{mutableStateOf("")}
 
     val c = Calendar.getInstance()
     val year = c.get(Calendar.YEAR)
-    val month = c.get(Calendar.MONTH)
+    val month = c.get(Calendar.MONTH) + 1
     val day = c.get(Calendar.DAY_OF_MONTH)
+    val hour = c[Calendar.HOUR_OF_DAY]
+    val minute = c[Calendar.MINUTE]
 
     val datePickerDialog = DatePickerDialog(
         LocalContext.current, DatePickerDialog.OnDateSetListener
         { datePicker: DatePicker, day: Int, month: Int, year: Int ->
             editDate.value = "$day/$month/$year"
         }, year, month, day
+    )
+
+    val timePickerDialog = TimePickerDialog(
+        LocalContext.current,
+        {
+                _, hour : Int, minute : Int ->
+            editTime.value = "$hour:$minute"
+        }, hour, minute,true
     )
 
     Surface {
@@ -126,6 +138,55 @@ fun EditCategoryReminder(
 
 
                 }
+                Row {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp)
+                            .border(0.5.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.5f))
+                            .clickable{
+                                timePickerDialog.show()
+                            }
+                    ){
+                        ConstraintLayout(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ){
+                            val (tlable, ticonView) = createRefs()
+
+                            Text(
+                                text= if(editTime.value != "") {editTime.value} else{"Remind me at (time : Optional)"},
+                                color = MaterialTheme.colors.onSurface,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .constrainAs(tlable) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        start.linkTo(parent.start)
+                                        end.linkTo(ticonView.start)
+                                        width = Dimension.fillToConstraints
+                                    }
+                            )
+
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(20.dp, 20.dp)
+                                    .constrainAs(ticonView) {
+                                        end.linkTo(parent.end)
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                    },
+                                tint = MaterialTheme.colors.onSurface
+                            )
+                        }
+                    }
+
+
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
                     onClick = {
@@ -138,7 +199,8 @@ fun EditCategoryReminder(
                                     reminderDate = editDate.value,
                                     reminderCategoryId = getEditCategoryId(viewState.categories,editCategoryValue.value),
                                     location_x = null,
-                                    location_y = null
+                                    location_y = null,
+                                    reminderTime = editTime.value
                                 )
                             )
                         }

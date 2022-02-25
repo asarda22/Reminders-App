@@ -1,5 +1,9 @@
 package com.example.reminderapp.ui.home
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reminderapp.Graph
@@ -22,7 +26,7 @@ class HomeViewModel(
     }
 
     init {
-
+        createNotificationChannel(context = Graph.appContext)
         viewModelScope.launch {
             combine(
                 categoryRepository.categories().onEach { categories ->
@@ -56,7 +60,21 @@ class HomeViewModel(
     }
 }
 
-
+private fun createNotificationChannel(context: Context) {
+    // Create the NotificationChannel, but only on API 26+ because
+    // the NotificationChannel class is new and not in the support library
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "NotificationChannelName"
+        val descriptionText = "NotificationChannelDescriptionText"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
+            description = descriptionText
+        }
+        // register the channel with the system
+        val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+}
 
 data class HomeViewState(
     val categories : List<Category> = emptyList(),
