@@ -28,7 +28,7 @@ fun ReminderApp(
             Home(navController = appState.navController)
         }
         composable(route = "reminder") {
-            Reminder(onBackPress = appState::navigateBack)
+            Reminder(onBackPress = appState::navigateBack, navController = appState.navController)
         }
         composable(route = "edit") {
 

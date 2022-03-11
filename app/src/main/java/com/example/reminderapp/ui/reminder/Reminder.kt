@@ -1,7 +1,11 @@
 package com.example.reminderapp.ui.reminder
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.util.Log
 import android.widget.DatePicker
 import androidx.compose.foundation.border
@@ -24,14 +28,40 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.reminderapp.Graph
 import com.example.reminderapp.data.entity.Category
+import com.example.reminderapp.ui.MapsActivity
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.launch
+
+
+/*val context = Graph.appContext
+var activity = context.findActivity()
+var intent = activity?.intent
+
+val x = intent?.getStringExtra("message")
+//Log.i("x",x)
+
+
+fun Context.findActivity(): Activity? = when(this){
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}*/
+
 
 @Composable
 fun Reminder(
     onBackPress: () -> Unit,
-    viewModel: ReminderViewModel = viewModel()
+    viewModel: ReminderViewModel = viewModel(),
+    navController: NavController
 ) {
+    /*if(x != null)
+    {
+        Log.i("x",x)
+    }*/
+
     val viewState by viewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val message = rememberSaveable { mutableStateOf("") }
@@ -60,6 +90,13 @@ fun Reminder(
             time.value = "$hour:$minute"
         }, hour, minute,true
     )
+
+       val latlng = navController
+        .currentBackStackEntry
+        ?.savedStateHandle
+        ?.getLiveData<LatLng>("location_data")
+        ?.value
+
 
 
     Surface {
@@ -144,6 +181,43 @@ fun Reminder(
                    }
 
 
+                }
+                /*Spacer(modifier = Modifier.height(10.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    if (latlng == null) {
+                        OutlinedButton(
+                            onClick = { navController.navigate("map") },
+                            modifier = Modifier.height(55.dp)
+                        ) {
+                            Text(text = "Payment location")
+                        }
+                    } else {
+                        Text(
+                            text = "Lat: ${latlng.latitude}, \nLng: ${latlng.longitude}"
+                        )
+                    }
+                }*/
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    if (latlng == null) {
+                        OutlinedButton(
+                            //onClick = { navController.navigate("map") },
+                            onClick = {
+                                val context = Graph.appContext
+                                context.startActivity(Intent(context, MapsActivity::class.java))
+                                /*val intent : Intent = Intent(context,MapsActivity::class.java)
+                                intent?.putExtra("reminder",message.value)
+                                context.startActivity(Intent(context, MapsActivity::class.java))*/
+                            },
+                            modifier = Modifier.height(55.dp)
+                        ) {
+                            Text(text = "Reminder location (optional)")
+                        }
+                    } else {
+                        Text(
+                            text = "Lat: ${latlng.latitude}, \nLng: ${latlng.longitude}"
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Row {
